@@ -1,0 +1,98 @@
+import { useState, useEffect } from "react";
+import Todo from "../../components/todo/Todo";
+
+const URL = "http://localhost:8000/todos";
+
+function TodosPage() {
+    const [inputValue, setInputValue] = useState("");
+    const [todos, setTodos] = useState([]);
+
+    async function getTodos() {
+        const response = await fetch(URL);
+        const todos = await response.json();
+        setTodos(todos);
+    }
+
+    async function createTodo() {
+        const data = {
+            title: inputValue,
+            status: false
+        };
+        const response = await fetch(URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data)
+        });
+        if (response.status === 201) {
+            getTodos();
+        }
+    }
+
+    async function deleteTodo(id) {
+        const response = await fetch(`${URL}/${id}`, {
+            method: "DELETE"
+        });
+        if (response.status === 200) {
+            getTodos();
+        }
+    }
+
+    async function updateTodoStatus(id, status) {
+        const oneTodo = { status };
+        const response = await fetch(`${URL}/${id}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(oneTodo)
+        });
+        if (response.status === 200) {
+            getTodos();
+        }
+    }
+
+    async function updateTodoTitle(id, newTitle) {
+        const updatedTodo = { title: newTitle };
+        const response = await fetch(`${URL}/${id}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedTodo)
+        });
+        if (response.status === 200) {
+            getTodos();
+        }
+    }
+
+    useEffect(() => {
+        getTodos();
+    }, []);
+
+    return (
+        <div>
+            <h2>Todo list</h2>
+            <input
+                type="text"
+                placeholder="Введите задачу"
+                onInput={(e) => setInputValue(e.target.value)}
+            />
+            <button onClick={createTodo}>Создать задачу</button>
+            <ul>
+                {todos.map((element) => (
+                    <Todo
+                         key={element.id}
+                        todo={element}
+                        deleteTodo={deleteTodo}
+                        updateTodoStatus={updateTodoStatus}
+                        updateTodoTitle={updateTodoTitle}
+                    />
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+export default TodosPage;
